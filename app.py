@@ -3,8 +3,6 @@
 import logging
 import streamlit as st
 
-from src.ui.pages.favorites import render_favorites_page
-from src.ui.pages.history import render_history_page
 from src.ui.pages.search import render_search_page
 
 logging.basicConfig(
@@ -16,34 +14,13 @@ st.set_page_config(
     page_title="FilmFinder",
     page_icon="🎬",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
-# Sidebar navigation
-st.sidebar.title("FilmFinder")
-st.sidebar.caption("Deutsches TV-Programm durchsuchen")
-
-pages = {
-    "Suche": "🔍",
-    "Favoriten": "⭐",
-    "Suchverlauf": "📜",
-}
-
-default_page = st.session_state.pop("nav", "Suche")
-if default_page not in pages:
-    default_page = "Suche"
-
-selected = st.sidebar.radio(
-    "Navigation",
-    list(pages.keys()),
-    index=list(pages.keys()).index(default_page),
-    format_func=lambda x: f"{pages[x]} {x}",
-    label_visibility="collapsed",
+# Hide the sidebar completely
+st.markdown(
+    "<style>[data-testid='stSidebar']{display:none}</style>",
+    unsafe_allow_html=True,
 )
 
-if selected == "Suche":
-    render_search_page()
-elif selected == "Favoriten":
-    render_favorites_page()
-elif selected == "Suchverlauf":
-    render_history_page()
+render_search_page()
