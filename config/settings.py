@@ -38,7 +38,8 @@ SMTP_FROM = os.environ.get("FILMFINDER_SMTP_FROM", SMTP_USER)
 
 # Supabase (subscription storage)
 # Supports both env vars (GitHub Actions) and st.secrets (Streamlit Cloud)
-def _get_secret(key: str, default: str = "") -> str:
+def get_secret(key: str, default: str = "") -> str:
+    """Read a secret from env vars first, then st.secrets."""
     val = os.environ.get(key, "")
     if val:
         return val
@@ -47,6 +48,3 @@ def _get_secret(key: str, default: str = "") -> str:
         return st.secrets.get(key, default)
     except Exception:
         return default
-
-SUPABASE_URL = _get_secret("SUPABASE_URL")
-SUPABASE_KEY = _get_secret("SUPABASE_KEY")

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 import requests
 
-from config.settings import SUPABASE_URL, SUPABASE_KEY
+from config.settings import get_secret
 
 logger = logging.getLogger(__name__)
 
@@ -14,16 +14,17 @@ TABLE = "subscriptions"
 
 
 def _headers() -> dict:
+    key = get_secret("SUPABASE_KEY")
     return {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
         "Prefer": "return=representation",
     }
 
 
 def _api(path: str = "") -> str:
-    return f"{SUPABASE_URL}/rest/v1/{TABLE}{path}"
+    return f"{get_secret('SUPABASE_URL')}/rest/v1/{TABLE}{path}"
 
 
 def add_subscription(email: str, search_term: str, channel: str | None = None) -> dict:
