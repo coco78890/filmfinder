@@ -5,6 +5,7 @@ import re
 
 from rapidfuzz import fuzz
 
+from config.channels import ALL_CHANNELS
 from config.settings import (
     FUZZY_SEARCH_THRESHOLD,
     FUZZY_WEIGHTS,
@@ -105,7 +106,8 @@ def search(
     try:
         from src.search.vector import is_available, vector_search as vs
         if is_available():
-            vector_results = vs(query)
+            known_channels = set(ALL_CHANNELS)
+            vector_results = [vr for vr in vs(query) if vr.get("channel") in known_channels]
             if vector_results:
                 fuzzy_by_key = {}
                 for item in scored:

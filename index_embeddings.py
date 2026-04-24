@@ -12,6 +12,7 @@ Environment variables required:
 
 import logging
 
+from config.channels import ALL_CHANNELS
 from config.settings import EMBEDDING_BROAD_QUERIES
 from src.scrapers.mediathekview import fetch_mediathekview_listings
 from src.search.vector import cleanup_old_embeddings, embed_batch, upsert_embeddings
@@ -58,6 +59,16 @@ def index_all():
 
     if not all_listings:
         logger.warning("No listings fetched — nothing to index.")
+        return
+
+    # Filter to known channels only (removes test channels and duplicates like "Das Erste HD")
+    known = set(ALL_CHANNELS)
+    before_filter = len(all_listings)
+    all_listings = [l for l in all_listings if l.get("channel") in known]
+    logger.info(f"Filtered to known channels: {before_filter} -> {len(all_listings)}")
+
+    if not all_listings:
+        logger.warning("No listings after channel filter — nothing to index.")
         return
 
     logger.info(f"Total unique listings to embed: {len(all_listings)}")
