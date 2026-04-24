@@ -91,6 +91,23 @@ def render_search_page():
 
         if not display_results:
             st.info("Keine Treffer gefunden. Versuchen Sie einen anderen Suchbegriff.")
+            st.markdown("**Möchten Sie benachrichtigt werden, wenn der Film verfügbar ist?**")
+            if st.button("Ja, benachrichtigen", key="notify_no_results_btn"):
+                st.session_state["show_notify_input"] = True
+            if st.session_state.get("show_notify_input", False):
+                notify_email = st.text_input(
+                    "E-Mail-Adresse",
+                    placeholder="ihre.email@beispiel.de",
+                    key="notify_email_no_results",
+                )
+                if st.button("Benachrichtigung einrichten", key="notify_submit_no_results"):
+                    if notify_email and re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", notify_email):
+                        channel_filter = None if selected_channel == "Alle Sender" else selected_channel
+                        add_subscription(notify_email.strip(), last_query, channel_filter)
+                        st.success(f"Sie werden per E-Mail benachrichtigt, wenn '{last_query}' im Programm erscheint.")
+                        st.session_state["show_notify_input"] = False
+                    else:
+                        st.error("Bitte geben Sie eine gültige E-Mail-Adresse ein.")
         else:
             # Add to favorites button
             if st.button(f'Als Favorit merken: "{last_query}"', key="add_fav_from_search"):
@@ -172,19 +189,6 @@ def render_search_page():
                     })
                 st.dataframe(coverage_data, use_container_width=True, hide_index=True)
 
-            # Email notification for this search
-            with st.expander("Per E-Mail benachrichtigen"):
-                notify_email = st.text_input(
-                    "E-Mail-Adresse",
-                    placeholder="ihre.email@beispiel.de",
-                    key="notify_email_search",
-                )
-                if st.button("Benachrichtigung einrichten", key="notify_btn_search"):
-                    if notify_email and re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", notify_email):
-                        add_subscription(notify_email.strip(), last_query, channel_filter if 'channel_filter' in dir() else None)
-                        st.success(f"Sie werden per E-Mail benachrichtigt, wenn '{last_query}' im Programm erscheint.")
-                    else:
-                        st.error("Bitte geben Sie eine gueltige E-Mail-Adresse ein.")
 
     # EPG coverage table
     cached = st.session_state.get("cached_listings", [])

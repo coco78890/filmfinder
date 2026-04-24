@@ -24,6 +24,11 @@ logger = logging.getLogger(__name__)
 @st.cache_resource(ttl=86400)
 def _run_daily_notification_check():
     """Run notification check once per day in a background thread."""
+    from config.settings import get_secret
+    if not get_secret("SUPABASE_URL"):
+        logger.info("Skipping notification check — SUPABASE_URL not configured.")
+        return False
+
     def _check():
         try:
             from check_notifications import check_and_notify
