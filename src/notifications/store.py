@@ -15,6 +15,7 @@ TABLE = "subscriptions"
 
 def _headers() -> dict:
     key = get_secret("SUPABASE_KEY")
+    logger.info(f"SUPABASE_KEY loaded: {'yes (' + str(len(key)) + ' chars)' if key else 'EMPTY'}")
     return {
         "apikey": key,
         "Authorization": f"Bearer {key}",
@@ -24,7 +25,9 @@ def _headers() -> dict:
 
 
 def _api(path: str = "") -> str:
-    return f"{get_secret('SUPABASE_URL')}/rest/v1/{TABLE}{path}"
+    url = get_secret("SUPABASE_URL")
+    logger.info(f"SUPABASE_URL loaded: {'yes' if url else 'EMPTY'}")
+    return f"{url}/rest/v1/{TABLE}{path}"
 
 
 def add_subscription(email: str, search_term: str, channel: str | None = None) -> dict:
