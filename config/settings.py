@@ -31,7 +31,7 @@ DISPLAY_TIMEZONE = "Europe/Berlin"
 import os
 
 SMTP_HOST = os.environ.get("FILMFINDER_SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("FILMFINDER_SMTP_PORT", "587"))
+SMTP_PORT = int(os.environ.get("FILMFINDER_SMTP_PORT") or "587")
 SMTP_USER = os.environ.get("FILMFINDER_SMTP_USER", "")
 SMTP_PASSWORD = os.environ.get("FILMFINDER_SMTP_PASSWORD", "")
 SMTP_FROM = os.environ.get("FILMFINDER_SMTP_FROM", SMTP_USER)
