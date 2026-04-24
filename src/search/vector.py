@@ -114,9 +114,10 @@ def upsert_embeddings(listings: list[dict], embeddings: list[list[float]]) -> in
 
     # Upsert in chunks of 100
     upserted = 0
+    params = {"on_conflict": "channel,title,start_time"}
     for i in range(0, len(rows), 100):
         chunk = rows[i : i + 100]
-        resp = http_requests.post(url, headers=headers, json=chunk, timeout=REQUEST_TIMEOUT)
+        resp = http_requests.post(url, headers=headers, params=params, json=chunk, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
         upserted += len(resp.json())
 
