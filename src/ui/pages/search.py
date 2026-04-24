@@ -136,6 +136,41 @@ def render_search_page():
                 },
             )
 
+            # Coverage per sender based on search results
+            coverage = {}
+            for r in display_results:
+                channel = r.get("channel", "")
+                end = r.get("end_time", "") or r.get("start_time", "")
+                if not channel or not end:
+                    continue
+                try:
+                    dt = datetime.fromisoformat(end).astimezone(berlin)
+                    if channel not in coverage or dt > coverage[channel]:
+                        coverage[channel] = dt
+                except (ValueError, TypeError):
+                    continue
+
+            if coverage:
+                st.subheader("Abdeckung pro Sender")
+                coverage_data = []
+                for ch in sorted(coverage):
+                    latest = coverage[ch]
+                    delta = latest - now
+                    hours = delta.total_seconds() / 3600
+                    if hours < 0:
+                        bis_text = "Keine zukuenftigen Daten"
+                    elif hours < 24:
+                        bis_text = f"{hours:.1f} Std."
+                    else:
+                        days = hours / 24
+                        bis_text = f"{days:.1f} Tage"
+                    coverage_data.append({
+                        "Sender": ch,
+                        "Daten bis": latest.strftime("%d.%m.%Y %H:%M"),
+                        "Reichweite": bis_text,
+                    })
+                st.dataframe(coverage_data, use_container_width=True, hide_index=True)
+
             # Email notification for this search
             with st.expander("Per E-Mail benachrichtigen"):
                 notify_email = st.text_input(

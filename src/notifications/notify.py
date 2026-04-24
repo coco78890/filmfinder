@@ -2,11 +2,9 @@
 
 import logging
 import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 
 from config.settings import (
-    DISPLAY_TIMEZONE,
     SMTP_FROM,
     SMTP_HOST,
     SMTP_PASSWORD,
@@ -17,13 +15,20 @@ from config.settings import (
 logger = logging.getLogger(__name__)
 
 
+def _clean(text: str) -> str:
+    """Replace non-breaking spaces and other problematic chars."""
+    return text.replace("\xa0", " ") if text else ""
+
+
 def send_notification(to_email: str, search_term: str, matches: list[dict]):
     """Send an email notification about found matches."""
     if not SMTP_USER or not SMTP_PASSWORD:
         logger.error("SMTP credentials not configured. Set FILMFINDER_SMTP_USER and FILMFINDER_SMTP_PASSWORD.")
         raise RuntimeError("SMTP-Zugangsdaten sind nicht konfiguriert.")
 
-    msg = MIMEMultipart("alternative")
+    search_term = _clean(search_term)
+
+    msg = EmailMessage()
     msg["Subject"] = f"FilmFinder: Treffer fuer '{search_term}'"
     msg["From"] = SMTP_FROM
     msg["To"] = to_email
@@ -31,8 +36,8 @@ def send_notification(to_email: str, search_term: str, matches: list[dict]):
     # Build plain text body
     lines = [f"Hallo,\n\nfuer Ihren Suchbegriff '{search_term}' wurden {len(matches)} Treffer gefunden:\n"]
     for m in matches[:20]:
-        channel = m.get("channel", "")
-        title = m.get("title", "")
+        channel = _clean(m.get("channel", ""))
+        title = _clean(m.get("title", ""))
         start = m.get("start_time", "")
         date_str = start[:10] if len(start) >= 10 else start
         lines.append(f"  - {channel}: {title} ({date_str})")
@@ -44,11 +49,11 @@ def send_notification(to_email: str, search_term: str, matches: list[dict]):
     # Build HTML body
     rows = ""
     for m in matches[:20]:
-        channel = m.get("channel", "")
-        title = m.get("title", "")
+        channel = _clean(m.get("channel", ""))
+        title = _clean(m.get("title", ""))
         start = m.get("start_time", "")
         date_str = start[:10] if len(start) >= 10 else start
-        desc = (m.get("description", "") or "")[:80]
+        desc = _clean((m.get("description", "") or "")[:80])
         rows += f"<tr><td>{channel}</td><td>{title}</td><td>{date_str}</td><td>{desc}</td></tr>\n"
 
     html_body = f"""\
@@ -65,12 +70,12 @@ def send_notification(to_email: str, search_term: str, matches: list[dict]):
 </body>
 </html>"""
 
-    msg.attach(MIMEText(text_body, "plain", "utf-8"))
-    msg.attach(MIMEText(html_body, "html", "utf-8"))
+    msg.set_content(text_body)
+    msg.add_alternative(html_body, subtype="html")
 
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(SMTP_FROM, to_email, msg.as_string())
+        server.send_message(msg)
 
     logger.info(f"Notification sent to {to_email} for '{search_term}' ({len(matches)} matches)")

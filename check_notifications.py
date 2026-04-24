@@ -57,8 +57,8 @@ def check_and_notify():
             else:
                 logger.info(f"No matches for '{search_term}'")
 
-        except Exception as e:
-            logger.error(f"Failed to process subscription {sub['id']}: {e}")
+        except Exception:
+            logger.exception(f"Failed to process subscription {sub['id']}")
 
 
 if __name__ == "__main__":

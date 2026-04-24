@@ -5,7 +5,7 @@ import re
 import streamlit as st
 
 from config.channels import ALL_CHANNELS
-from src.notifications.store import add_subscription, list_subscriptions, remove_subscription
+from src.notifications.store import add_subscription
 
 
 def _is_valid_email(email: str) -> bool:
@@ -35,29 +35,3 @@ def render_notifications_page():
                 channel_filter = None if selected_channel == "Alle Sender" else selected_channel
                 sub = add_subscription(email.strip(), search_term.strip(), channel_filter)
                 st.success(f"Benachrichtigung fuer '{search_term}' an {email} wurde eingerichtet!")
-
-    st.divider()
-
-    # List existing subscriptions
-    st.subheader("Aktive Benachrichtigungen")
-    subs = list_subscriptions()
-
-    if not subs:
-        st.info("Noch keine Benachrichtigungen eingerichtet.")
-        return
-
-    for sub in subs:
-        with st.container():
-            col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
-            with col1:
-                st.markdown(f"**{sub['search_term']}**")
-            with col2:
-                st.caption(sub["email"])
-            with col3:
-                channel = sub.get("channel") or "Alle Sender"
-                st.caption(channel)
-            with col4:
-                if st.button("Entfernen", key=f"del_notif_{sub['id']}"):
-                    remove_subscription(sub["id"])
-                    st.rerun()
-        st.divider()
