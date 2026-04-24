@@ -5,7 +5,13 @@ import re
 
 from rapidfuzz import fuzz
 
-from config.settings import FUZZY_SEARCH_THRESHOLD, FUZZY_WEIGHTS
+from config.settings import (
+    FUZZY_SEARCH_THRESHOLD,
+    FUZZY_WEIGHTS,
+    FUZZY_WEIGHT,
+    VECTOR_WEIGHT,
+    VECTOR_ONLY_PENALTY,
+)
 from src.scrapers.mediathekview import fetch_mediathekview_listings
 
 logger = logging.getLogger(__name__)
@@ -94,6 +100,35 @@ def search(
         if score >= threshold:
             listing["relevance"] = score
             scored.append(listing)
+
+    # Vector search enrichment
+    try:
+        from src.search.vector import is_available, vector_search as vs
+        if is_available():
+            vector_results = vs(query)
+            if vector_results:
+                fuzzy_by_key = {}
+                for item in scored:
+                    key = (item["channel"], item["title"], item.get("start_time", ""))
+                    fuzzy_by_key[key] = item
+
+                for vr in vector_results:
+                    key = (vr["channel"], vr["title"], vr.get("start_time", ""))
+                    similarity_pct = vr["similarity"] * 100
+
+                    if key in fuzzy_by_key:
+                        # Blend fuzzy + vector scores
+                        existing = fuzzy_by_key[key]
+                        existing["relevance"] = round(
+                            FUZZY_WEIGHT * existing["relevance"] + VECTOR_WEIGHT * similarity_pct, 1
+                        )
+                    else:
+                        # Vector-only result
+                        vr["relevance"] = round(similarity_pct * VECTOR_ONLY_PENALTY, 1)
+                        if vr["relevance"] >= threshold:
+                            scored.append(vr)
+    except Exception as e:
+        logger.warning(f"Vector search failed, using fuzzy only: {e}")
 
     # Sort by relevance desc, then start_time asc
     scored.sort(key=lambda x: (-x["relevance"], x.get("start_time", "")))
