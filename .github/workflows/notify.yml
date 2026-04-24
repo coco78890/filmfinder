@@ -1,0 +1,32 @@
+name: Daily Notification Check
+
+on:
+  schedule:
+    # Runs every day at 8:00 AM UTC (10:00 AM Berlin time)
+    - cron: "0 8 * * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  check-notifications:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run notification check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          FILMFINDER_SMTP_HOST: ${{ secrets.FILMFINDER_SMTP_HOST }}
+          FILMFINDER_SMTP_PORT: ${{ secrets.FILMFINDER_SMTP_PORT }}
+          FILMFINDER_SMTP_USER: ${{ secrets.FILMFINDER_SMTP_USER }}
+          FILMFINDER_SMTP_PASSWORD: ${{ secrets.FILMFINDER_SMTP_PASSWORD }}
+          FILMFINDER_SMTP_FROM: ${{ secrets.FILMFINDER_SMTP_FROM }}
+        run: python check_notifications.py

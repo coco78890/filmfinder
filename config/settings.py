@@ -26,3 +26,27 @@ FUZZY_WEIGHTS = {
 
 # Timezone
 DISPLAY_TIMEZONE = "Europe/Berlin"
+
+# Email / SMTP settings (configure via environment variables)
+import os
+
+SMTP_HOST = os.environ.get("FILMFINDER_SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("FILMFINDER_SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("FILMFINDER_SMTP_USER", "")
+SMTP_PASSWORD = os.environ.get("FILMFINDER_SMTP_PASSWORD", "")
+SMTP_FROM = os.environ.get("FILMFINDER_SMTP_FROM", SMTP_USER)
+
+# Supabase (subscription storage)
+# Supports both env vars (GitHub Actions) and st.secrets (Streamlit Cloud)
+def _get_secret(key: str, default: str = "") -> str:
+    val = os.environ.get(key, "")
+    if val:
+        return val
+    try:
+        import streamlit as st
+        return st.secrets.get(key, default)
+    except Exception:
+        return default
+
+SUPABASE_URL = _get_secret("SUPABASE_URL")
+SUPABASE_KEY = _get_secret("SUPABASE_KEY")

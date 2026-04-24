@@ -1,14 +1,38 @@
 """FilmFinder — German TV Program Search App (stateless version)."""
 
 import logging
+import threading
 import streamlit as st
 
 from src.ui.pages.search import render_search_page
+from src.ui.pages.notifications import render_notifications_page
+from check_notifications import check_and_notify
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
+logger = logging.getLogger(__name__)
+
+
+@st.cache_resource(ttl=86400)  # 24 hours
+def _run_daily_notification_check():
+    """Run notification check once per day in a background thread."""
+    def _check():
+        try:
+            logger.info("Starting daily notification check...")
+            check_and_notify()
+            logger.info("Daily notification check completed.")
+        except Exception as e:
+            logger.error(f"Daily notification check failed: {e}")
+
+    thread = threading.Thread(target=_check, daemon=True)
+    thread.start()
+    return True
+
+
+# Trigger daily check on app load (non-blocking)
+_run_daily_notification_check()
 
 st.set_page_config(
     page_title="FilmFinder",
@@ -23,4 +47,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-render_search_page()
+tab_search, tab_notifications = st.tabs(["Suche", "Benachrichtigungen"])
+
+with tab_search:
+    render_search_page()
+
+with tab_notifications:
+    render_notifications_page()

@@ -1,5 +1,7 @@
 """Search page — main search interface."""
 
+import re
+
 import pytz
 import streamlit as st
 from datetime import datetime
@@ -7,6 +9,7 @@ from datetime import datetime
 from config.channels import ALL_CHANNELS
 from config.settings import DISPLAY_TIMEZONE
 from src.search.engine import search
+from src.notifications.store import add_subscription
 
 
 def render_search_page():
@@ -32,6 +35,8 @@ def render_search_page():
         with filter_col1:
             channels = ["Alle Sender"] + sorted(ALL_CHANNELS)
             selected_channel = st.selectbox("Sender", channels, key="filter_channel")
+        with filter_col2:
+            show_past = st.checkbox("Vergangene Sendungen anzeigen", key="show_past")
 
     # Execute search
     if search_clicked and query:
@@ -62,9 +67,28 @@ def render_search_page():
     last_query = st.session_state.get("last_query", "")
 
     if last_query:
-        st.subheader(f'Ergebnisse für "{last_query}" ({len(results)} Treffer)')
+        # Filter out past occurrences unless checkbox is checked
+        now = datetime.now(pytz.timezone(DISPLAY_TIMEZONE))
+        if not st.session_state.get("show_past", False):
+            filtered_results = []
+            for r in results:
+                start = r.get("start_time", "")
+                if start:
+                    try:
+                        dt = datetime.fromisoformat(start).astimezone(pytz.timezone(DISPLAY_TIMEZONE))
+                        if dt >= now:
+                            filtered_results.append(r)
+                    except (ValueError, TypeError):
+                        filtered_results.append(r)
+                else:
+                    filtered_results.append(r)
+            display_results = filtered_results
+        else:
+            display_results = results
 
-        if not results:
+        st.subheader(f'Ergebnisse für "{last_query}" ({len(display_results)} Treffer)')
+
+        if not display_results:
             st.info("Keine Treffer gefunden. Versuchen Sie einen anderen Suchbegriff.")
         else:
             # Add to favorites button
@@ -80,7 +104,7 @@ def render_search_page():
             # Results table
             berlin = pytz.timezone(DISPLAY_TIMEZONE)
             table_data = []
-            for r in results:
+            for r in display_results:
                 start = r.get("start_time", "")
                 date_str = ""
                 time_str = ""
@@ -111,3 +135,55 @@ def render_search_page():
                     "Beschreibung": st.column_config.TextColumn(width="large"),
                 },
             )
+
+            # Email notification for this search
+            with st.expander("Per E-Mail benachrichtigen"):
+                notify_email = st.text_input(
+                    "E-Mail-Adresse",
+                    placeholder="ihre.email@beispiel.de",
+                    key="notify_email_search",
+                )
+                if st.button("Benachrichtigung einrichten", key="notify_btn_search"):
+                    if notify_email and re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", notify_email):
+                        add_subscription(notify_email.strip(), last_query, channel_filter if 'channel_filter' in dir() else None)
+                        st.success(f"Sie werden per E-Mail benachrichtigt, wenn '{last_query}' im Programm erscheint.")
+                    else:
+                        st.error("Bitte geben Sie eine gueltige E-Mail-Adresse ein.")
+
+    # EPG coverage table
+    cached = st.session_state.get("cached_listings", [])
+    if cached:
+        berlin = pytz.timezone(DISPLAY_TIMEZONE)
+        now = datetime.now(berlin)
+        coverage = {}
+        for listing in cached:
+            channel = listing.get("channel", "")
+            end = listing.get("end_time", "") or listing.get("start_time", "")
+            if not channel or not end:
+                continue
+            try:
+                dt = datetime.fromisoformat(end).astimezone(berlin)
+                if channel not in coverage or dt > coverage[channel]:
+                    coverage[channel] = dt
+            except (ValueError, TypeError):
+                continue
+
+        if coverage:
+            with st.expander("Programmabdeckung pro Sender"):
+                coverage_data = []
+                for ch in sorted(coverage):
+                    latest = coverage[ch]
+                    delta = latest - now
+                    hours = delta.total_seconds() / 3600
+                    if hours < 0:
+                        bis_text = "Keine zukünftigen Daten"
+                    elif hours < 1:
+                        bis_text = f"{int(delta.total_seconds() / 60)} Min."
+                    else:
+                        bis_text = f"{hours:.1f} Std."
+                    coverage_data.append({
+                        "Sender": ch,
+                        "Daten bis": latest.strftime("%d.%m.%Y %H:%M"),
+                        "Reichweite": bis_text,
+                    })
+                st.dataframe(coverage_data, use_container_width=True, hide_index=True)

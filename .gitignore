@@ -23,10 +23,11 @@ env/
 .env
 .env.*
 
-# Database
+# Database & data
 data/*.db
 data/*.db-wal
 data/*.db-shm
+data/*.json
 
 # OS
 .DS_Store
