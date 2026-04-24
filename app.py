@@ -4,9 +4,15 @@ import logging
 import threading
 import streamlit as st
 
-from src.ui.pages.search import render_search_page
-from src.ui.pages.notifications import render_notifications_page
-from check_notifications import check_and_notify
+st.set_page_config(
+    page_title="FilmFinder",
+    page_icon="🎬",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
+from src.ui.theme import inject_theme
+inject_theme()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,11 +21,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-@st.cache_resource(ttl=86400)  # 24 hours
+@st.cache_resource(ttl=86400)
 def _run_daily_notification_check():
     """Run notification check once per day in a background thread."""
     def _check():
         try:
+            from check_notifications import check_and_notify
             logger.info("Starting daily notification check...")
             check_and_notify()
             logger.info("Daily notification check completed.")
@@ -31,21 +38,17 @@ def _run_daily_notification_check():
     return True
 
 
-# Trigger daily check on app load (non-blocking)
+# Trigger daily check in background (non-blocking)
 _run_daily_notification_check()
-
-st.set_page_config(
-    page_title="FilmFinder",
-    page_icon="🎬",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
 
 # Hide the sidebar completely
 st.markdown(
     "<style>[data-testid='stSidebar']{display:none}</style>",
     unsafe_allow_html=True,
 )
+
+from src.ui.pages.search import render_search_page
+from src.ui.pages.notifications import render_notifications_page
 
 tab_search, tab_notifications = st.tabs(["Suche", "Benachrichtigungen"])
 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 56" width="240" height="56">
+  <g font-family="Source Serif 4, Charter, Georgia, serif">
+    <text x="0" y="40" font-size="36" font-weight="500" fill="#141414" letter-spacing="-0.02em">Film</text>
+    <text x="78" y="40" font-size="36" font-weight="500" fill="#D8352A" letter-spacing="-0.02em">Finder</text>
+  </g>
+  <circle cx="225" cy="16" r="5" fill="#D8352A"></circle>
+</svg>

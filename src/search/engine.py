@@ -83,12 +83,13 @@ def search(
     scored = []
     for listing in all_listings:
         title = listing.get("title", "")
-        score = compute_score(query, title)
+        title_score = compute_score(query, title)
 
         desc = listing.get("description", "")
-        if desc:
-            desc_score = compute_score(query, desc)
-            score = max(score, score * 0.8 + desc_score * 0.2)
+        desc_score = compute_score(query, desc) if desc else 0.0
+
+        # Use the best of: title alone, or a blend that gives description real weight
+        score = max(title_score, title_score * 0.6 + desc_score * 0.4)
 
         if score >= threshold:
             listing["relevance"] = score

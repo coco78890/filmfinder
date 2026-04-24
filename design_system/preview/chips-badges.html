@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border:1px solid #E8E3D9;border-radius:999px;font-family:'Work Sans',sans-serif;font-size:13px;font-weight:500;background:#fff;color:#141414}
+.chip img{width:22px;height:22px;border-radius:4px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;font-family:'Work Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase}
+.badge.live{background:#FBE8E6;color:#B22820}
+.badge.live .dot{width:6px;height:6px;border-radius:999px;background:#D8352A;animation:pulse 1.4s ease-out infinite}
+.badge.soon{background:#FAEFD0;color:#9A6900}
+.badge.subscribed{background:#E3F1E9;color:#155A38}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body><div class="card col" style="min-height:140px">
+  <div class="label-row"><span class="label">Chips & badges</span><span class="meta">channel · status</span></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <span class="chip"><img src="../assets/channels/daserste.svg">Das Erste</span>
+    <span class="chip"><img src="../assets/channels/zdf.svg">ZDF</span>
+    <span class="chip"><img src="../assets/channels/arte.svg">arte</span>
+    <span class="chip"><img src="../assets/channels/rtl.svg">RTL</span>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:2px">
+    <span class="badge live"><span class="dot"></span>Jetzt live</span>
+    <span class="badge soon">Heute 20:15</span>
+    <span class="badge subscribed">Benachrichtigung aktiv</span>
+  </div>
+</div></body></html>

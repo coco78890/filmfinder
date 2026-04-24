@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+.btn{font-family:'Work Sans',sans-serif;font-size:14px;font-weight:500;padding:10px 16px;border-radius:4px;border:1px solid transparent;cursor:pointer;line-height:1}
+.btn.primary{background:#D8352A;color:#fff}
+.btn.primary:hover{background:#B22820}
+.btn.secondary{background:#fff;color:#141414;border-color:#E8E3D9}
+.btn.secondary:hover{background:#F6F1E8}
+.btn.ghost{background:transparent;color:#141414}
+.btn.ghost:hover{background:#F6F1E8}
+.btn.danger{background:transparent;color:#B22820;border-color:#FBE8E6}
+.btn.danger:hover{background:#FBE8E6}
+</style>
+</head>
+<body><div class="card col" style="min-height:120px">
+  <div class="label-row"><span class="label">Buttons</span><span class="meta">primary · secondary · ghost · danger</span></div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn primary">Suchen</button>
+    <button class="btn secondary">Filter</button>
+    <button class="btn ghost">Abbrechen</button>
+    <button class="btn danger">Entfernen</button>
+    <button class="btn primary" disabled style="opacity:.5;cursor:not-allowed">Disabled</button>
+  </div>
+</div></body></html>

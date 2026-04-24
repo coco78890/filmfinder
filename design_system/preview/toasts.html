@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+.row{display:flex;gap:12px;align-items:center;font-family:'Work Sans',sans-serif;font-size:13px}
+.toast{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:6px;font-family:'Work Sans',sans-serif;font-size:13px;border:1px solid}
+.toast.s{background:#E3F1E9;border-color:#b5dbc1;color:#155A38}
+.toast.w{background:#FAEFD0;border-color:#ebd07a;color:#9A6900}
+.toast.e{background:#FBE8E6;border-color:#f0bdb7;color:#B22820}
+.toast.i{background:#E1ECF7;border-color:#b8d0e8;color:#1F5592}
+.toast .dot{width:8px;height:8px;border-radius:99px;flex-shrink:0}
+</style>
+</head>
+<body><div class="card col" style="min-height:170px">
+  <div class="label-row"><span class="label">Notifications · toasts</span><span class="meta">success / info / warn / error</span></div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="toast s"><span class="dot" style="background:#1F7A4D"></span>'Tatort' wurde zu den Favoriten hinzugefügt.</div>
+    <div class="toast i"><span class="dot" style="background:#2C6FB8"></span>Sie werden per E-Mail benachrichtigt, wenn 'James Bond' im Programm erscheint.</div>
+    <div class="toast w"><span class="dot" style="background:#C98A00"></span>Keine zukünftigen Daten für diesen Sender.</div>
+    <div class="toast e"><span class="dot" style="background:#D8352A"></span>Bitte geben Sie eine gültige E-Mail-Adresse ein.</div>
+  </div>
+</div></body></html>

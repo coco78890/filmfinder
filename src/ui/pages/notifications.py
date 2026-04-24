@@ -33,5 +33,8 @@ def render_notifications_page():
                 st.error("Bitte geben Sie einen Suchbegriff ein.")
             else:
                 channel_filter = None if selected_channel == "Alle Sender" else selected_channel
-                sub = add_subscription(email.strip(), search_term.strip(), channel_filter)
-                st.success(f"Benachrichtigung fuer '{search_term}' an {email} wurde eingerichtet!")
+                try:
+                    sub = add_subscription(email.strip(), search_term.strip(), channel_filter)
+                    st.success(f"Benachrichtigung fuer '{search_term}' an {email} wurde eingerichtet!")
+                except Exception as e:
+                    st.error("Benachrichtigungen sind derzeit nicht verfuegbar. Bitte SUPABASE_URL und SUPABASE_KEY konfigurieren.")

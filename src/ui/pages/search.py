@@ -14,7 +14,8 @@ from src.notifications.store import add_subscription
 
 def render_search_page():
     """Render the main search page."""
-    st.header("Suche")
+    from src.ui.theme import hero
+    hero()
 
     # Search input
     col1, col2 = st.columns([4, 1])

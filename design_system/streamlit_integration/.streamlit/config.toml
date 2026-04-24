@@ -1,5 +1,6 @@
 [theme]
 # FilmFinder Design System — Streamlit theme
+# Maps the design tokens to Streamlit's theming hooks.
 primaryColor = "#D8352A"
 backgroundColor = "#FBF8F3"
 secondaryBackgroundColor = "#F6F1E8"

@@ -19,7 +19,11 @@ def fetch_mediathekview_listings(query: str = "", size: int = MEDIATHEKVIEW_DEFA
                 {
                     "fields": ["title", "topic"],
                     "query": query if query else "*",
-                }
+                },
+                {
+                    "fields": ["description"],
+                    "query": query if query else "*",
+                },
             ],
             "sortBy": "timestamp",
             "sortOrder": "desc",
