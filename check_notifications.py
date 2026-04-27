@@ -15,7 +15,7 @@ Environment variables required:
 
 import logging
 
-from src.notifications.store import list_subscriptions, update_last_notified
+from src.notifications.store import deactivate_subscription, list_subscriptions
 from src.notifications.notify import send_notification
 from src.search.engine import search
 
@@ -53,7 +53,8 @@ def check_and_notify():
             if results:
                 logger.info(f"Found {len(results)} matches for '{search_term}' -> {email}")
                 send_notification(email, search_term, results)
-                update_last_notified(sub["id"])
+                deactivate_subscription(sub["id"])
+                logger.info(f"Subscription {sub['id']} deactivated after first notification")
             else:
                 logger.info(f"No matches for '{search_term}'")
 

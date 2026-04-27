@@ -89,3 +89,17 @@ def update_last_notified(sub_id: str):
         json={"last_notified": datetime.now(timezone.utc).isoformat()},
     )
     resp.raise_for_status()
+
+
+def deactivate_subscription(sub_id: str):
+    """Mark a subscription as inactive so it is no longer included in the daily check."""
+    resp = requests.patch(
+        _api(),
+        headers=_headers(),
+        params={"id": f"eq.{sub_id}"},
+        json={
+            "active": False,
+            "last_notified": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    resp.raise_for_status()
