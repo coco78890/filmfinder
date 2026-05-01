@@ -14,6 +14,7 @@ Environment variables required:
 """
 
 import logging
+from datetime import datetime, timezone
 
 from src.notifications.store import deactivate_subscription, list_subscriptions
 from src.notifications.notify import send_notification
@@ -24,6 +25,25 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+def _future_only(results: list[dict]) -> list[dict]:
+    """Keep only results whose start_time is now or later."""
+    now = datetime.now(timezone.utc)
+    upcoming = []
+    for r in results:
+        start = r.get("start_time", "")
+        if not start:
+            continue
+        try:
+            dt = datetime.fromisoformat(start)
+        except (ValueError, TypeError):
+            continue
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        if dt >= now:
+            upcoming.append(r)
+    return upcoming
 
 
 def check_and_notify():
@@ -50,11 +70,17 @@ def check_and_notify():
                 enrich_from_api=True,
             )
 
-            if results:
-                logger.info(f"Found {len(results)} matches for '{search_term}' -> {email}")
-                send_notification(email, search_term, results)
+            upcoming = _future_only(results)
+
+            if upcoming:
+                logger.info(f"Found {len(upcoming)} upcoming matches for '{search_term}' -> {email}")
+                send_notification(email, search_term, upcoming)
                 deactivate_subscription(sub["id"])
                 logger.info(f"Subscription {sub['id']} deactivated after first notification")
+            elif results:
+                logger.info(
+                    f"Only past matches for '{search_term}' ({len(results)} total) — keeping subscription active"
+                )
             else:
                 logger.info(f"No matches for '{search_term}'")
 
