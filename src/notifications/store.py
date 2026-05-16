@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 import requests
 
-from config.settings import get_secret
+from config.settings import get_secret, get_supabase_key
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +14,8 @@ TABLE = "subscriptions"
 
 
 def _headers() -> dict:
-    key = get_secret("SUPABASE_KEY")
-    logger.info(f"SUPABASE_KEY loaded: {'yes (' + str(len(key)) + ' chars)' if key else 'EMPTY'}")
+    key = get_supabase_key()
+    logger.info(f"Supabase key loaded: {'yes (' + str(len(key)) + ' chars)' if key else 'EMPTY'}")
     return {
         "apikey": key,
         "Authorization": f"Bearer {key}",

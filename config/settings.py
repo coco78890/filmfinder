@@ -62,3 +62,8 @@ def get_secret(key: str, default: str = "") -> str:
         return st.secrets.get(key, default)
     except Exception:
         return default
+
+
+def get_supabase_key() -> str:
+    """Read the server-side Supabase key used by backend REST calls."""
+    return get_secret("SUPABASE_SERVICE_ROLE_KEY") or get_secret("SUPABASE_KEY")

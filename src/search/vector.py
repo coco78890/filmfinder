@@ -13,6 +13,7 @@ from config.settings import (
     VECTOR_SEARCH_COUNT,
     VECTOR_SEARCH_THRESHOLD,
     get_secret,
+    get_supabase_key,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,13 +36,13 @@ def _load_model():
 
 def is_available() -> bool:
     """Check if vector search is configured (model + Supabase)."""
-    if not get_secret("SUPABASE_URL") or not get_secret("SUPABASE_KEY"):
+    if not get_secret("SUPABASE_URL") or not get_supabase_key():
         return False
     return _load_model() is not None
 
 
 def _headers() -> dict:
-    key = get_secret("SUPABASE_KEY")
+    key = get_supabase_key()
     return {
         "apikey": key,
         "Authorization": f"Bearer {key}",
