@@ -7,7 +7,7 @@ Usage:
 
 Environment variables required:
     SUPABASE_URL  — Supabase project URL
-    SUPABASE_KEY  — Supabase API key
+    SUPABASE_SERVICE_ROLE_KEY  — Supabase service-role API key
 """
 
 import logging
