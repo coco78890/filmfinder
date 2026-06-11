@@ -1,9 +1,11 @@
 """Vector search module — sentence-transformers + Supabase pgvector."""
 
 import logging
+import time
 from datetime import datetime, timezone
 
 import requests as http_requests
+from requests.exceptions import RequestException
 
 from config.settings import (
     EMBEDDING_TABLE,
@@ -19,6 +21,8 @@ from config.settings import (
 logger = logging.getLogger(__name__)
 
 _model = None
+UPSERT_CHUNK_SIZE = 50
+SUPABASE_WRITE_RETRIES = 3
 
 
 def _load_model():
@@ -90,7 +94,7 @@ def upsert_embeddings(listings: list[dict], embeddings: list[list[float]]) -> in
     """Upsert listing+embedding pairs into Supabase. Returns count of rows upserted."""
     url = f"{get_secret('SUPABASE_URL')}/rest/v1/{EMBEDDING_TABLE}"
     headers = _headers()
-    headers["Prefer"] = "resolution=merge-duplicates,return=representation"
+    headers["Prefer"] = "resolution=merge-duplicates,return=minimal"
 
     rows = []
     for listing, embedding in zip(listings, embeddings):
@@ -113,25 +117,56 @@ def upsert_embeddings(listings: list[dict], embeddings: list[list[float]]) -> in
             "indexed_at": datetime.now(timezone.utc).isoformat(),
         })
 
-    # Upsert in chunks of 100
+    # Keep request/response bodies modest; GitHub Actions can see chunked response drops
+    # when Supabase returns rows with full embedding vectors.
     upserted = 0
     params = {"on_conflict": "channel,title,start_time"}
-    for i in range(0, len(rows), 100):
-        chunk = rows[i : i + 100]
-        resp = http_requests.post(url, headers=headers, params=params, json=chunk, timeout=REQUEST_TIMEOUT)
+    for i in range(0, len(rows), UPSERT_CHUNK_SIZE):
+        chunk = rows[i : i + UPSERT_CHUNK_SIZE]
+        resp = _request_with_retries(
+            "post",
+            url,
+            headers=headers,
+            params=params,
+            json=chunk,
+            timeout=REQUEST_TIMEOUT,
+        )
         resp.raise_for_status()
-        upserted += len(resp.json())
+        upserted += len(chunk)
 
     return upserted
 
 
-def cleanup_old_embeddings(days: int = 7) -> int:
-    """Delete embeddings older than `days` days. Returns count deleted."""
+def _request_with_retries(method: str, url: str, **kwargs) -> http_requests.Response:
+    """Run a Supabase write request with short backoff for transient transport errors."""
+    last_error = None
+    for attempt in range(1, SUPABASE_WRITE_RETRIES + 1):
+        try:
+            return http_requests.request(method, url, **kwargs)
+        except RequestException as exc:
+            last_error = exc
+            if attempt == SUPABASE_WRITE_RETRIES:
+                break
+            delay = 2 ** (attempt - 1)
+            logger.warning(
+                "Supabase %s failed on attempt %s/%s: %s; retrying in %ss",
+                method.upper(),
+                attempt,
+                SUPABASE_WRITE_RETRIES,
+                exc,
+                delay,
+            )
+            time.sleep(delay)
+    raise last_error
+
+
+def cleanup_old_embeddings(days: int = 7) -> None:
+    """Delete embeddings older than `days` days."""
     from datetime import timedelta
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     url = f"{get_secret('SUPABASE_URL')}/rest/v1/{EMBEDDING_TABLE}"
+    headers = _headers()
+    headers["Prefer"] = "return=minimal"
     params = {"indexed_at": f"lt.{cutoff}"}
-    resp = http_requests.delete(url, headers=_headers(), params=params, timeout=REQUEST_TIMEOUT)
+    resp = _request_with_retries("delete", url, headers=headers, params=params, timeout=REQUEST_TIMEOUT)
     resp.raise_for_status()
-    deleted = resp.json()
-    return len(deleted)

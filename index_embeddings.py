@@ -94,8 +94,8 @@ def index_all():
 
     # 6. Clean up old entries
     try:
-        deleted = cleanup_old_embeddings(days=7)
-        logger.info(f"Cleaned up {deleted} old embeddings")
+        cleanup_old_embeddings(days=7)
+        logger.info("Cleaned up old embeddings")
     except Exception as e:
         logger.warning(f"Cleanup failed: {e}")
 
